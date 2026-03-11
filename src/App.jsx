@@ -550,8 +550,8 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
       for (let i = 0; i < bagQty; i++) onReserve(store);
       setReserveState('reserved');
-      setTimeout(() => setReserveState('impact'), 1000);
-      setTimeout(() => animClose(), 4000);
+      setTimeout(() => setReserveState('impact'), 3500);
+      setTimeout(() => animClose(), 10000);
     }
   };
   const totalPrice = (store.price * bagQty).toFixed(2);
