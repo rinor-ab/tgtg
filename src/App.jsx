@@ -1336,7 +1336,7 @@ export default function App() {
 
   useEffect(() => {
     if (!showNotif) return;
-    const t = setTimeout(() => setShowNotif(false), 8000);
+    const t = setTimeout(() => setShowNotif(false), 14000);
     return () => clearTimeout(t);
   }, [showNotif]);
 
@@ -1358,6 +1358,8 @@ export default function App() {
 
   /* ─── undo reservation toast ─── */
   const [undoToast, setUndoToast] = useState(null); // { store, timer }
+  const [locationToast, setLocationToast] = useState(false);
+  const locationToastTimer = useRef(null);
   const handleUndo = useCallback(() => {
     if (!undoToast) return;
     const store = undoToast.store;
@@ -1410,7 +1412,7 @@ export default function App() {
         }}>
           {/* Row 1: location + bell */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <button style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <button onClick={() => { clearTimeout(locationToastTimer.current); setLocationToast(true); locationToastTimer.current = setTimeout(() => setLocationToast(false), 3500); }} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <PinIcon />
               <span style={{ color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: SYS }}>St. Gallen, CH</span>
               <ChevronDown />
@@ -1526,7 +1528,7 @@ export default function App() {
                 {/* Auto-dismiss progress bar */}
                 {showNotif && (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3 }}>
-                    <div style={{ height: '100%', background: TEAL, borderRadius: '0 999px 999px 0', animation: 'notifProgress 8s linear forwards' }} />
+                    <div style={{ height: '100%', background: TEAL, borderRadius: '0 999px 999px 0', animation: 'notifProgress 14s linear forwards' }} />
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -1653,6 +1655,21 @@ export default function App() {
               background: 'none', border: 'none', cursor: 'pointer',
               color: '#5BAD92', fontSize: 13, fontWeight: 700, fontFamily: SYS,
             }}>Undo</button>
+          </div>
+        )}
+
+        {/* ─── LOCATION TOAST ─── */}
+        {locationToast && (
+          <div style={{
+            position: 'absolute', bottom: 68, left: 16, right: 16, zIndex: 55,
+            background: '#1F2937', borderRadius: 14, padding: '12px 16px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            animation: 'fadeIn 0.25s ease', boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+          }}>
+            <span style={{ fontSize: 18 }}>📍</span>
+            <span style={{ fontSize: 13, color: '#fff', fontFamily: SYS }}>
+              Only St. Gallen is available in this version
+            </span>
           </div>
         )}
 

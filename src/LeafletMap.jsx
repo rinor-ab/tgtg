@@ -421,7 +421,7 @@ export default function LeafletMap({ ix, tagData, handleReserve, stores, searchQ
                 <ClusteredMarkers pins={STORE_PINS} pinIcons={pinIcons} onPinClick={handlePinClick} />
 
                 {/* You are here */}
-                <Marker position={[47.4248, 9.3762]} icon={youAreHereIcon} interactive={false} />
+                <Marker position={[47.43167237092631, 9.374918435398666]} icon={youAreHereIcon} interactive={false} />
             </MapContainer>
 
             {/* Attribution overlay (custom styled) */}
