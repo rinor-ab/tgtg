@@ -577,9 +577,9 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
         {/* Scrollable content */}
         <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', paddingBottom: success ? 24 : 100 }}>
           {/* Image */}
-          <div style={{ height: 200, position: 'relative', overflow: 'hidden', background: store.bgColor }}>
+          <div style={{ height: 240, position: 'relative', overflow: 'hidden', background: store.bgColor, borderRadius: '24px 24px 0 0' }}>
             {store.image
-              ? <img src={store.image} alt={store.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ? <img src={store.image} alt={store.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
               : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontSize: 72, opacity: 0.85 }}>{store.emoji}</span>
               </div>
