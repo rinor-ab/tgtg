@@ -74,6 +74,10 @@ const CO2_BY_CATEGORY = {
   chocolaterie: { co2: 0.8, km: 3 },
   restaurant: { co2: 1.5, km: 5.6 },
   coffee: { co2: 0.4, km: 1.5 },
+  deli: { co2: 1.0, km: 3.8 },
+  fine: { co2: 1.0, km: 3.8 },
+  asian: { co2: 1.3, km: 4.8 },
+  vegetarian: { co2: 1.4, km: 5.2 },
 };
 function getCo2ForStore(store) {
   const cat = (store.category || '').toLowerCase();

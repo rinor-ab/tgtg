@@ -26,6 +26,12 @@ const STORE_PINS = [
     { id: 'coop_restaurant', name: 'Coop Restaurant Marktgasse', emoji: '🍽️', coords: [47.4241, 9.3771], tags: ['🍱 Hot Meal', '🥗 Veggie'], price: 'CHF 5.90', bags: 2, pickup: '19:30–21:00', walkMin: 3 },
     { id: 'praline_scherrer', name: 'Praliné Scherrer', emoji: '🍫', coords: [47.4243, 9.3767], tags: ['🍫 Chocolate', '🧁 Sweets'], price: 'CHF 4.50', bags: 4, pickup: '17:30–18:30', walkMin: 2 },
     { id: 'esswerk', name: 'Esswerk', emoji: '🥗', coords: [47.4256, 9.3745], tags: ['🥗 Veggie', '🌿 Organic'], price: 'CHF 5.50', bags: 3, pickup: '20:00–21:30', walkMin: 5 },
+    { id: 'greco', name: 'Greco Fine Food', emoji: '🫒', coords: [47.4252, 9.3791], tags: ['🥙 Savory', '🧀 Dairy'], price: 'CHF 4.90', bags: 3, pickup: '17:30–19:00', walkMin: 3 },
+    { id: 'chocolaterie_kloster', name: 'Chocolaterie am Klosterplatz', emoji: '🍫', coords: [47.4235, 9.3759], tags: ['🍰 Pastry', '🍫 Chocolate'], price: 'CHF 4.20', bags: 4, pickup: '17:00–18:30', walkMin: 4 },
+    { id: 'pinchu', name: 'PinChu', emoji: '🥟', coords: [47.4232, 9.3750], tags: ['🍱 Hot Meal', '🥙 Savory'], price: 'CHF 5.50', bags: 2, pickup: '19:00–21:00', walkMin: 4 },
+    { id: 'brezelkoenig', name: 'Brezelkönig - Bahnhof St. Gallen', emoji: '🥨', coords: [47.4238, 9.3699], tags: ['🥐 Bakery', '🥨 Pretzels'], price: 'CHF 3.50', bags: 5, pickup: '18:00–19:30', walkMin: 6 },
+    { id: 'tibits', name: 'tibits - St. Gallen', emoji: '🥗', coords: [47.4230, 9.3711], tags: ['🥗 Veggie', '🌿 Organic'], price: 'CHF 5.90', bags: 3, pickup: '19:30–21:00', walkMin: 5 },
+    { id: 'kuhn', name: 'Bäckerei Kuhn - Neumarkt', emoji: '🥖', coords: [47.4216, 9.3713], tags: ['🥐 Bakery', '🍰 Pastry'], price: 'CHF 3.90', bags: 4, pickup: '16:30–18:00', walkMin: 6 },
 ];
 
 /* ─── Live feed messages ─── */
