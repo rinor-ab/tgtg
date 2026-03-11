@@ -1071,6 +1071,9 @@ export default function App() {
   /* ─ Onboarding ─ */
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('tgtg_onboarded'));
 
+  /* ─ Detect PWA standalone mode ─ */
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
   /* ─ Loading shimmer ─ */
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setIsLoading(false), 1200); return () => clearTimeout(t); }, []);
@@ -1387,8 +1390,14 @@ export default function App() {
   const HEADER_H = 138;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#DDD9D0', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24, paddingBottom: 24, paddingLeft: 16, paddingRight: 16 }}>
-      <div className="relative rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col" style={{ width: 375, height: 812, background: BG }}>
+    <div style={isStandalone
+      ? { height: '100%', background: BG, display: 'flex', flexDirection: 'column' }
+      : { minHeight: '100vh', background: '#DDD9D0', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24, paddingBottom: 24, paddingLeft: 16, paddingRight: 16 }
+    }>
+      <div className={isStandalone ? 'relative overflow-hidden flex flex-col' : 'relative shadow-2xl overflow-hidden flex flex-col'} style={isStandalone
+        ? { width: '100%', height: '100%', background: BG }
+        : { width: 375, height: 812, background: BG }
+      }>
 
         {/* ─── PERSISTENT GREEN HEADER ─── */}
         <div style={{

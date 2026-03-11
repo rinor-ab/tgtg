@@ -169,12 +169,19 @@ export const badges = [
 ];
 
 export const leaderboard = [
-    { rank: 1, name: 'Lukas G.',   points: 1380, isYou: false },
-    { rank: 2, name: 'You',        points: 1045, isYou: true  },
-    { rank: 3, name: 'Mateo O.',   points: 980,  isYou: false },
-    { rank: 4, name: 'Nina T.',    points: 860,  isYou: false },
-    { rank: 5, name: 'Ainhoa E.',  points: 740,  isYou: false },
-    { rank: 6, name: 'Marta C.',   points: 620,  isYou: false },
-    { rank: 7, name: 'Michel S.',  points: 510,  isYou: false },
-    { rank: 8, name: 'Adriana B.', points: 390,  isYou: false },
+    { rank: 1,  name: 'Lukas G.',       points: 1380, isYou: false },
+    { rank: 2,  name: 'Egor A.',        points: 1210, isYou: false },
+    { rank: 3,  name: 'You',            points: 1045, isYou: true  },
+    { rank: 4,  name: 'Mateo O.',       points: 980,  isYou: false },
+    { rank: 5,  name: 'Mia B.',         points: 920,  isYou: false },
+    { rank: 6,  name: 'Nina T.',        points: 860,  isYou: false },
+    { rank: 7,  name: 'Florian M.',     points: 790,  isYou: false },
+    { rank: 8,  name: 'Ainhoa E.',      points: 740,  isYou: false },
+    { rank: 9,  name: 'Anastasija P.',  points: 680,  isYou: false },
+    { rank: 10, name: 'Marta C.',       points: 620,  isYou: false },
+    { rank: 11, name: 'Janik S.',       points: 560,  isYou: false },
+    { rank: 12, name: 'Michel S.',      points: 510,  isYou: false },
+    { rank: 13, name: 'Sofonias T.',    points: 450,  isYou: false },
+    { rank: 14, name: 'Adriana B.',     points: 390,  isYou: false },
+    { rank: 15, name: 'Anika S.',       points: 340,  isYou: false },
 ];
