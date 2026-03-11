@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
     claimedQuests: 'tgtg_claimedQuests',
     redeemedRewards: 'tgtg_redeemedRewards',
     lifetimePoints: 'tgtg_lifetimePoints',
+    reservations: 'tgtg_reservations',
 };
 
 function loadFromStorage(key, fallback) {
@@ -36,6 +37,9 @@ export function TagDataProvider({ children }) {
     const [lifetimePoints, setLifetimePoints] = useState(() =>
         loadFromStorage(STORAGE_KEYS.lifetimePoints, 1045)
     );
+    const [reservations, setReservations] = useState(() =>
+        loadFromStorage(STORAGE_KEYS.reservations, [])
+    );
 
     // Persist tagData
     useEffect(() => {
@@ -61,6 +65,25 @@ export function TagDataProvider({ children }) {
     useEffect(() => {
         localStorage.setItem(STORAGE_KEYS.lifetimePoints, JSON.stringify(lifetimePoints));
     }, [lifetimePoints]);
+
+    // Persist reservations
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEYS.reservations, JSON.stringify(reservations));
+    }, [reservations]);
+
+    const addReservation = (reservation) => {
+        setReservations((prev) => [reservation, ...prev]);
+    };
+
+    const updateReservationStatus = (reservationId, newStatus) => {
+        setReservations((prev) =>
+            prev.map((r) => r.id === reservationId ? { ...r, status: newStatus } : r)
+        );
+    };
+
+    const getActiveReservation = (bagId) => {
+        return reservations.find((r) => r.bagId === bagId && (r.status === 'reserved' || r.status === 'ready'));
+    };
 
     const addEcoPoints = (pts) => {
         setEcoPoints((p) => p + pts);
@@ -103,6 +126,10 @@ export function TagDataProvider({ children }) {
                 claimQuest,
                 redeemedRewards,
                 redeemReward,
+                reservations,
+                addReservation,
+                updateReservationStatus,
+                getActiveReservation,
             }}
         >
             {children}

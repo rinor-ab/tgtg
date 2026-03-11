@@ -677,20 +677,28 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
                     </div>
                   </div>
 
-                  {/* Directions button */}
+                  {/* Action buttons */}
                   <button
-                    onClick={() => {
-                      const addr = encodeURIComponent(store.address);
-                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr}`, '_blank');
-                    }}
+                    onClick={() => { animClose(); ix.openStore(null); setTimeout(() => document.getElementById('tab-profile')?.click(), 100); }}
                     style={{
-                      marginTop: 12, width: '100%', padding: '10px 0', borderRadius: 12,
-                      background: '#fff', border: `1.5px solid ${TEAL}`, color: TEAL,
+                      marginTop: 12, width: '100%', padding: '12px 0', borderRadius: 12,
+                      background: TEAL, border: 'none', color: '#fff',
                       fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: SYS,
+                      animation: 'countUp 0.4s ease 0.4s both',
+                    }}
+                  >
+                    View My Reservations
+                  </button>
+                  <button
+                    onClick={() => { animClose(); }}
+                    style={{
+                      marginTop: 8, width: '100%', padding: '10px 0', borderRadius: 12,
+                      background: '#fff', border: `1.5px solid #E5E7EB`, color: '#6B7280',
+                      fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: SYS,
                       animation: 'countUp 0.4s ease 0.5s both',
                     }}
                   >
-                    📍 Get Directions
+                    Continue Browsing
                   </button>
                 </div>
               )
@@ -1076,7 +1084,7 @@ function ImpactCard({ store, bagsTotal, onClose }) {
    MAIN APP
    ══════════════════════════════════ */
 export default function App() {
-  const { tagData, updateTagData, ecoPoints, addEcoPoints, lifetimePoints, claimedQuests, claimQuest, redeemedRewards, redeemReward } = useTagData();
+  const { tagData, updateTagData, ecoPoints, addEcoPoints, lifetimePoints, claimedQuests, claimQuest, redeemedRewards, redeemReward, reservations, addReservation, updateReservationStatus, getActiveReservation } = useTagData();
 
   /* ─ Onboarding ─ */
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('tgtg_onboarded'));
@@ -1251,13 +1259,47 @@ export default function App() {
     ].slice(0, 12));
     setImpactStore(store);
     setLastImpactData({ store, bags: bagsReservedCount + 1 });
+
+    // Award eco points for saving food
+    addEcoPoints(10);
+    flashPts(10);
+
+    // Increment streak quest progress
+    setQuestProgress(prev => ({ ...prev, q3: Math.min(quests.find(q => q.id === 'q3').total, (prev.q3 ?? 0) + 1) }));
+
+    // Create reservation object
+    if (!getActiveReservation(store.id)) {
+      const now = new Date();
+      const startH = now.getHours() + 2;
+      const pickupStart = new Date(now); pickupStart.setHours(startH, 0, 0, 0);
+      const pickupEnd = new Date(now); pickupEnd.setHours(startH + 1, 30, 0, 0);
+      const topTags = getTopTags(tagData[store.id], 3).map(t => t.label);
+      addReservation({
+        id: `res_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        bagId: store.id,
+        storeName: store.name,
+        storeAddress: store.address,
+        storeLatitude: store.lat,
+        storeLongitude: store.lng,
+        pickupWindowStart: pickupStart.toISOString(),
+        pickupWindowEnd: pickupEnd.toISOString(),
+        status: 'reserved',
+        reservedAt: now.toISOString(),
+        communityTags: topTags.length > 0 ? topTags : ['Surprise Bag'],
+        price: store.price,
+        imageUrl: store.image || '',
+        logo: store.logo || '',
+        emoji: store.emoji || '🛒',
+      });
+    }
+
     // Show undo toast
     setUndoToast(prev => {
       if (prev?.timer) clearTimeout(prev.timer);
       const timer = setTimeout(() => setUndoToast(null), 5000);
       return { store, timer };
     });
-  }, [bagCounts, reservedStores]);
+  }, [bagCounts, reservedStores, tagData, getActiveReservation, addReservation, addEcoPoints, flashPts]);
 
   /* ─── tag submit ─── */
   const handleSubmitReview = useCallback(() => {
@@ -1371,7 +1413,7 @@ export default function App() {
   const dismissNotif = useCallback(() => { setShowNotif(false); setBellDot(false); }, []);
 
   /* ─── interaction bundle ─── */
-  const ix = { bagCounts, favourites, toggleFav, heartAnim, flashBags, openStore: setSelectedStore, nowMins, reservedStores, taggedStores, handleReserve };
+  const ix = { bagCounts, favourites, toggleFav, heartAnim, flashBags, openStore: setSelectedStore, nowMins, reservedStores, taggedStores, handleReserve, reservations };
 
   /* ─── undo reservation toast ─── */
   const [undoToast, setUndoToast] = useState(null); // { store, timer }
@@ -1500,9 +1542,9 @@ export default function App() {
               searchQuery={searchQuery} setSearchQuery={setSearchQuery} setReviewStore={openReviewStore} ix={ix} />
           )}
           {isLoading && activeTab === 'stores' ? <SkeletonBrowse /> : activeTab === 'stores' && <BrowseScreen tagData={tagData} setReviewStore={openReviewStore} ix={ix} handleReserve={handleReserve} searchQuery={searchQuery} />}
-          {activeTab === 'profile' && <ProfileScreen ecoPoints={ecoPoints} lifetimePoints={lifetimePoints} bagsSaved={bagsReservedCount} activityFeed={activityFeed} setActiveTab={switchTab} lastImpactData={lastImpactData} onOpenRewards={() => setShowRewardsShop(true)} />}
+          {activeTab === 'profile' && <ProfileScreen ecoPoints={ecoPoints} lifetimePoints={lifetimePoints} bagsSaved={bagsReservedCount} activityFeed={activityFeed} setActiveTab={switchTab} lastImpactData={lastImpactData} onOpenRewards={() => setShowRewardsShop(true)} reservations={reservations} updateReservationStatus={updateReservationStatus} />}
           {isLoading && activeTab === 'quest' ? <SkeletonQuest /> : activeTab === 'quest' && <QuestScreen xpAnimated={xpAnimated} ecoPoints={ecoPoints} lifetimePoints={lifetimePoints} claimedQuests={claimedQuests} handleClaim={handleClaim} questProgress={questProgress} onOpenRewards={() => setShowRewardsShop(true)} />}
-          {isLoading && activeTab === 'favourites' ? <SkeletonFavourites /> : activeTab === 'favourites' && <FavouritesScreen favourites={favourites} ix={ix} setReviewStore={openReviewStore} />}
+          {isLoading && activeTab === 'favourites' ? <SkeletonFavourites /> : activeTab === 'favourites' && <FavouritesScreen favourites={favourites} ix={ix} setReviewStore={openReviewStore} reservations={reservations} />}
 
         </div>
 
@@ -2112,8 +2154,9 @@ function QuestScreen({ xpAnimated, ecoPoints, lifetimePoints, claimedQuests, han
 /* ══════════════════════════════════
    FAVOURITES SCREEN
    ══════════════════════════════════ */
-function FavouritesScreen({ favourites, ix, setReviewStore }) {
+function FavouritesScreen({ favourites, ix, setReviewStore, reservations = [] }) {
   const favedStores = stores.filter(s => favourites.has(s.id));
+  const activeResBagIds = new Set(reservations.filter(r => r.status === 'reserved' || r.status === 'ready').map(r => r.bagId));
   return (
     <div style={{ padding: '16px 16px 8px' }}>
       <h2 style={{ fontSize: 19, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: SYS }}>Favourites</h2>
@@ -2131,7 +2174,16 @@ function FavouritesScreen({ favourites, ix, setReviewStore }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {favedStores.map(s => <BrowseListItem key={s.id} store={s} ix={ix} setReviewStore={setReviewStore} />)}
+          {favedStores.map(s => (
+            <div key={s.id} style={{ position: 'relative' }}>
+              <BrowseListItem store={s} ix={ix} setReviewStore={setReviewStore} />
+              {activeResBagIds.has(s.id) && (
+                <div style={{ position: 'absolute', top: 8, right: 8, background: '#D1FAE5', borderRadius: 999, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#065F46', fontFamily: SYS }}>
+                  Reserved
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -2377,12 +2429,195 @@ function RewardsShop({ ecoPoints, lifetimePoints, redeemedRewards, redeemReward,
 /* ══════════════════════════════════
    PROFILE / MORE SCREEN
    ══════════════════════════════════ */
-function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, setActiveTab, lastImpactData, onOpenRewards }) {
+function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, setActiveTab, lastImpactData, onOpenRewards, reservations = [], updateReservationStatus }) {
   const earnedBadges = badges.filter(b => b.earned);
   const [showLastImpact, setShowLastImpact] = useState(false);
 
+  // Check for missed pickups
+  const now = new Date();
+  const getResStatus = (r) => {
+    if (r.status === 'picked_up') return 'picked_up';
+    if ((r.status === 'reserved' || r.status === 'ready') && new Date(r.pickupWindowEnd) < now) return 'missed';
+    return r.status;
+  };
+
+  const activeRes = reservations.filter(r => {
+    const s = getResStatus(r);
+    return s === 'reserved' || s === 'ready';
+  }).sort((a, b) => new Date(a.pickupWindowStart) - new Date(b.pickupWindowStart));
+
+  const pastRes = reservations.filter(r => {
+    const s = getResStatus(r);
+    return s === 'picked_up' || s === 'missed';
+  }).sort((a, b) => new Date(b.reservedAt) - new Date(a.reservedAt));
+
+  const formatPickupTime = (start, end) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    const fmt = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `Today, ${fmt(s)} – ${fmt(e)}`;
+  };
+
+  const getPickupLabel = (r) => {
+    const s = new Date(r.pickupWindowStart);
+    const e = new Date(r.pickupWindowEnd);
+    if (now >= s && now <= e) return { text: 'Pick up NOW', highlight: true };
+    if (now < s) {
+      const diff = s - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      return { text: h > 0 ? `Pickup in ${h}h ${m}m` : `Pickup in ${m}m`, highlight: false };
+    }
+    return { text: 'Window passed', highlight: false };
+  };
+
+  const cycleStatus = (r) => {
+    if (!updateReservationStatus) return;
+    const order = ['reserved', 'ready', 'picked_up'];
+    const idx = order.indexOf(r.status);
+    const next = order[(idx + 1) % order.length];
+    updateReservationStatus(r.id, next);
+  };
+
+  const statusBadge = (r) => {
+    const s = getResStatus(r);
+    const styles = {
+      reserved: { bg: '#FEF3C7', color: '#92400E', text: 'Reserved' },
+      ready: { bg: '#D1FAE5', color: '#065F46', text: 'Ready for Pickup' },
+      picked_up: { bg: '#F3F4F6', color: '#6B7280', text: 'Picked Up' },
+      missed: { bg: '#FEE2E2', color: '#DC2626', text: 'Missed Pickup' },
+    };
+    const st = styles[s] || styles.reserved;
+    return (
+      <button onClick={() => cycleStatus(r)} style={{
+        background: st.bg, color: st.color, border: 'none', cursor: 'pointer',
+        padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, fontFamily: SYS,
+      }}>
+        {st.text}
+      </button>
+    );
+  };
+
+  const ReservationCard = ({ r, muted }) => {
+    const pickup = getPickupLabel(r);
+    return (
+      <div style={{
+        background: '#fff', borderRadius: 16, border: '1px solid #F3F4F6',
+        padding: '14px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        opacity: muted ? 0.6 : 1, transition: 'opacity 0.2s',
+      }}>
+        {/* Status badge */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          {statusBadge(r)}
+          {!muted && pickup.highlight && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '3px 8px', borderRadius: 999, fontFamily: SYS, animation: 'pulse 2s infinite' }}>
+              {pickup.text}
+            </span>
+          )}
+        </div>
+
+        {/* Main card content */}
+        <div style={{ display: 'flex', gap: 12 }}>
+          {/* Store image */}
+          <div style={{ width: 64, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#F3F4F6' }}>
+            {r.imageUrl
+              ? <img src={r.imageUrl} alt={r.storeName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{r.emoji || '🛒'}</div>
+            }
+          </div>
+
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', fontFamily: SYS }}>{r.storeName}</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: TEAL, fontFamily: SYS, flexShrink: 0 }}>CHF {r.price.toFixed(2)}</p>
+            </div>
+            <p style={{ fontSize: 12, color: '#6B7280', fontFamily: SYS, marginTop: 2 }}>
+              {!muted ? formatPickupTime(r.pickupWindowStart, r.pickupWindowEnd) : new Date(r.reservedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+            {!muted && !pickup.highlight && (
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', fontFamily: SYS, marginTop: 2 }}>{pickup.text}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Community tags */}
+        {r.communityTags && r.communityTags.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+            {r.communityTags.map(tag => (
+              <span key={tag} style={{ padding: '3px 8px', borderRadius: 999, background: '#F0FDF4', border: `1px solid ${TEAL}22`, fontSize: 10, color: '#374151', fontFamily: SYS }}>{tag}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Address + Directions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+          <p style={{ fontSize: 11, color: '#9CA3AF', fontFamily: SYS, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, marginRight: 8 }}>📍 {r.storeAddress}</p>
+          <button
+            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${r.storeLatitude},${r.storeLongitude}`, '_blank')}
+            style={{ padding: '5px 12px', borderRadius: 10, background: '#F3F4F6', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: TEAL, fontFamily: SYS, flexShrink: 0 }}
+          >
+            Get Directions
+          </button>
+        </div>
+
+        {/* Demo controls */}
+        {!muted && (
+          <div style={{ marginTop: 8, borderTop: '1px solid #F3F4F6', paddingTop: 8, display: 'flex', gap: 8 }}>
+            {r.status === 'reserved' && (
+              <button onClick={() => updateReservationStatus(r.id, 'ready')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#9CA3AF', fontFamily: SYS, padding: 0 }}>
+                Simulate: Mark Ready →
+              </button>
+            )}
+            {r.status === 'ready' && (
+              <button onClick={() => updateReservationStatus(r.id, 'picked_up')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#9CA3AF', fontFamily: SYS, padding: 0 }}>
+                Simulate: Mark Picked Up →
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={{ paddingBottom: 8 }}>
+      {/* My Reservations — most prominent section */}
+      <div style={{ padding: '16px 16px 0' }}>
+        <h2 style={{ fontSize: 19, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: SYS }}>🛒 My Reservations</h2>
+        {activeRes.length === 0 && pastRes.length === 0 ? (
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F3F4F6', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 12 }}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: TEAL + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <span style={{ fontSize: 32 }}>🛍️</span>
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 4, fontFamily: SYS }}>No bags reserved yet</p>
+            <p style={{ fontSize: 12, color: '#9CA3AF', fontFamily: SYS, marginBottom: 16 }}>Reserve a surprise bag and pick it up today!</p>
+            <button onClick={() => setActiveTab('home')} style={{ padding: '10px 24px', borderRadius: 999, background: TEAL, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', fontFamily: SYS }}>
+              Browse Stores
+            </button>
+          </div>
+        ) : (
+          <>
+            {activeRes.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontFamily: SYS }}>Active ({activeRes.length})</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {activeRes.map(r => <ReservationCard key={r.id} r={r} muted={false} />)}
+                </div>
+              </div>
+            )}
+            {pastRes.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontFamily: SYS }}>Past ({pastRes.length})</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {pastRes.map(r => <ReservationCard key={r.id} r={r} muted={true} />)}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Profile card */}
       <div style={{ margin: '16px 16px 0', background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #F3F4F6' }}>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
