@@ -86,7 +86,7 @@ function createPinIcon(emoji, price, isReserved, isSoldOut, isFav) {
     return L.divIcon({
         className: 'custom-pin-wrapper',
         html: `
-      <div style="position:relative;display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;border-radius:999px;padding:0 10px;height:28px;font-size:12px;font-weight:700;font-family:${SYS};white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25);cursor:pointer;opacity:${isSoldOut ? '0.6' : '1'};">
+      <div style="position:relative;display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;border-radius:999px;padding:0 10px;height:28px;font-size:12px;font-weight:700;font-family:${SYS};white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25);cursor:pointer;opacity:${isSoldOut ? '0.6' : '1'};transition:transform 0.15s ease;" onmousedown="this.style.transform='scale(1.2)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(1.2)'" ontouchend="this.style.transform='scale(1)'">
         <span style="font-size:13px;line-height:1;">${emoji}</span>
         <span>${label}</span>
         ${dot}${favDot}

@@ -510,6 +510,8 @@ function BrowseListItem({ store, ix, setReviewStore }) {
    STORE DETAIL SHEET
    ══════════════════════════════════ */
 function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, setReviewStore }) {
+  const [closing, setClosing] = useState(false);
+  const animClose = useCallback(() => { setClosing(true); setTimeout(onClose, 280); }, [onClose]);
   const [reserveState, setReserveState] = useState('idle'); // 'idle' | 'confirming' | 'reserved' | 'impact'
   const confirmTimerRef = useRef(null);
   const [bagQty, setBagQty] = useState(1);
@@ -526,7 +528,7 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
   const onSheetTouchEnd = () => {
     sheetDragging.current = false;
     sheetTouchY.current = null;
-    if (sheetDragY > 120) { onClose(); }
+    if (sheetDragY > 85) { animClose(); }
     setSheetDragY(0);
   };
   const bags = bagCounts[store.id] ?? store.bags;
@@ -549,14 +551,14 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
       for (let i = 0; i < bagQty; i++) onReserve(store);
       setReserveState('reserved');
       setTimeout(() => setReserveState('impact'), 1000);
-      setTimeout(() => onClose(), 4000);
+      setTimeout(() => animClose(), 4000);
     }
   };
   const totalPrice = (store.price * bagQty).toFixed(2);
 
   return (
-    <div className="absolute inset-0 z-40 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+    <div className="absolute inset-0 z-40 flex flex-col justify-end" style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.28s ease' }}>
+      <div className="absolute inset-0 bg-black/40" onClick={animClose} />
       <div
         onTouchStart={onSheetTouchStart}
         onTouchMove={onSheetTouchMove}
@@ -564,10 +566,10 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
         style={{
           position: 'relative', background: '#fff',
           borderRadius: '24px 24px 0 0', height: '87%', zIndex: 50,
-          animation: sheetDragY > 0 ? 'none' : 'slideUp 0.32s ease-out',
+          animation: sheetDragY > 0 ? 'none' : closing ? 'none' : 'slideUp 0.32s ease-out',
+          transform: closing ? 'translateY(100%)' : sheetDragY > 0 ? `translateY(${sheetDragY}px)` : undefined,
+          transition: closing ? 'transform 0.28s ease' : sheetDragging.current ? 'none' : 'transform 0.25s ease',
           display: 'flex', flexDirection: 'column',
-          transform: sheetDragY > 0 ? `translateY(${sheetDragY}px)` : undefined,
-          transition: sheetDragging.current ? 'none' : 'transform 0.25s ease',
         }}>
         {/* Drag handle */}
         <div style={{ width: 40, height: 4, background: '#D1D5DB', borderRadius: 999, margin: '10px auto 0', flexShrink: 0, cursor: 'grab' }} />
@@ -586,7 +588,7 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 50%, transparent 60%, rgba(0,0,0,0.3) 100%)', pointerEvents: 'none' }} />
             {/* Close */}
             <button
-              onClick={onClose}
+              onClick={animClose}
               style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.35)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <CloseIcon />
@@ -631,7 +633,7 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
                     ))}
                   </div>
                   <button
-                    onClick={() => { onClose(); ix.openStore(null); setTimeout(() => document.getElementById('tab-profile')?.click(), 100); }}
+                    onClick={() => { animClose(); ix.openStore(null); setTimeout(() => document.getElementById('tab-profile')?.click(), 100); }}
                     style={{ background: '#F3F4F6', border: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 12, fontFamily: SYS, padding: '8px 20px', borderRadius: 999, fontWeight: 600 }}
                   >
                     See your full impact →
@@ -950,13 +952,15 @@ function OnboardingScreen({ onDone }) {
    ══════════════════════════════════ */
 function BadgeUnlockModal({ badge, onClose }) {
   const canvasRef = useRef(null);
+  const [closing, setClosing] = useState(false);
+  const animClose = useCallback(() => { setClosing(true); setTimeout(onClose, 280); }, [onClose]);
   useEffect(() => {
     if (!canvasRef.current) return;
     return fireConfetti(canvasRef.current);
   }, []);
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)', animation: 'fadeIn 0.3s ease' }}>
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)', animation: closing ? 'none' : 'fadeIn 0.3s ease', opacity: closing ? 0 : 1, transition: 'opacity 0.28s ease' }}>
       {/* Confetti canvas */}
       <canvas ref={canvasRef} width={375} height={812} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }} />
 
@@ -994,7 +998,7 @@ function BadgeUnlockModal({ badge, onClose }) {
 
         {/* Glow button */}
         <button
-          onClick={onClose}
+          onClick={animClose}
           style={{
             padding: '14px 44px', borderRadius: 999, fontWeight: 700, fontSize: 15,
             border: 'none', cursor: 'pointer', fontFamily: SYS,
@@ -1014,11 +1018,13 @@ function BadgeUnlockModal({ badge, onClose }) {
    IMPACT CARD OVERLAY
    ══════════════════════════════════ */
 function ImpactCard({ store, bagsTotal, onClose }) {
+  const [closing, setClosing] = useState(false);
+  const animClose = useCallback(() => { setClosing(true); setTimeout(onClose, 280); }, [onClose]);
   const co2 = (bagsTotal * 2.5).toFixed(1);
   const money = (bagsTotal * 8).toFixed(0);
   return (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.55)', animation: 'fadeIn 0.25s ease' }}>
-      <div style={{ background: '#fff', borderRadius: 28, padding: '28px 24px', width: 310, textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', animation: 'slideUp 0.3s ease-out' }}>
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.55)', animation: closing ? 'none' : 'fadeIn 0.25s ease', opacity: closing ? 0 : 1, transition: 'opacity 0.28s ease' }}>
+      <div style={{ background: '#fff', borderRadius: 28, padding: '28px 24px', width: 310, textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', animation: closing ? 'none' : 'slideUp 0.3s ease-out', transform: closing ? 'translateY(30px)' : 'translateY(0)', transition: 'transform 0.28s ease' }}>
         {/* store image strip */}
         <div style={{ width: 72, height: 72, borderRadius: '50%', background: store.bgColor, overflow: 'hidden', margin: '0 auto 16px', border: `3px solid ${TEAL}` }}>
           {store.image
@@ -1046,7 +1052,7 @@ function ImpactCard({ store, bagsTotal, onClose }) {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '13px 0', borderRadius: 16, background: TEAL, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: SYS }}>
+          <button onClick={animClose} style={{ flex: 1, padding: '13px 0', borderRadius: 16, background: TEAL, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: SYS }}>
             Awesome! 🌱
           </button>
           <button
@@ -1081,6 +1087,15 @@ export default function App() {
   /* ─ Loading shimmer ─ */
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setIsLoading(false), 1200); return () => clearTimeout(t); }, []);
+
+  /* ─ Splash screen ─ */
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => setSplashFading(true), 1400);
+    const hideTimer = setTimeout(() => setSplashVisible(false), 1900);
+    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+  }, []);
 
   /* ─ Daily login bonus ─ */
   const [loginBonus, setLoginBonus] = useState(false);
@@ -1142,6 +1157,8 @@ export default function App() {
 
   /* ─ Tag modal ─ */
   const [reviewStore, setReviewStore] = useState(null);
+  const [reviewClosing, setReviewClosing] = useState(false);
+  const closeReview = useCallback(() => { setReviewClosing(true); setTimeout(() => { setReviewStore(null); setSelectedTags([]); setRating(0); setReviewClosing(false); }, 280); }, []);
   const [selectedTags, setSelectedTags] = useState([]);
   const [rating, setRating] = useState(0);
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false);
@@ -1405,6 +1422,27 @@ export default function App() {
         : { width: 375, height: 812, background: BG }
       }>
 
+        {/* ─── SPLASH SCREEN ─── */}
+        {splashVisible && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 9999,
+            background: `linear-gradient(160deg, ${TEAL} 0%, #4A9A7E 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: splashFading ? 0 : 1,
+            transition: 'opacity 0.5s ease',
+          }}>
+            <img
+              src="/stores/tgtg-logo.svg.png"
+              alt="Too Good To Go"
+              style={{
+                width: 120, height: 120, objectFit: 'contain',
+                filter: 'brightness(0) invert(1)',
+                animation: 'splashLogo 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              }}
+            />
+          </div>
+        )}
+
         {/* ─── PERSISTENT GREEN HEADER ─── */}
         <div style={{
           background: `linear-gradient(160deg, ${TEAL} 0%, #4A9A7E 100%)`,
@@ -1504,9 +1542,10 @@ export default function App() {
 
         {/* ─── NOTIFICATION BANNER ─── */}
         <div
-          className="absolute left-0 right-0 z-10 px-3"
+          className="absolute left-0 right-0 px-3"
           style={{
             top: HEADER_H,
+            zIndex: 1100,
             transform: showNotif ? 'translateY(0)' : 'translateY(-100%)',
             opacity: showNotif ? 1 : 0,
             transition: 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 250ms ease',
@@ -1533,7 +1572,8 @@ export default function App() {
                 )}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, position: 'relative' }}>
-                    <img src={notifStore?.logo} alt={notifStore?.name} style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
+                    <img src={notifStore?.logo} alt={notifStore?.name} style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                    <div style={{ display: 'none', width: 42, height: 42, borderRadius: 12, background: notifStore?.bgColor || '#888', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{notifStore?.emoji || '🛒'}</div>
                     {/* Notification type badge */}
                     <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 12, lineHeight: 1 }}>{notifType?.icon || '🔔'}</span>
                   </div>
@@ -1576,9 +1616,9 @@ export default function App() {
 
         {/* ─── TAG MODAL ─── */}
         {reviewStore && (
-          <div className="absolute inset-0 z-40 flex flex-col justify-end">
-            <div className="absolute inset-0 bg-black/30" onClick={() => { setReviewStore(null); setSelectedTags([]); setRating(0); }} />
-            <div style={{ position: 'relative', background: '#fff', borderRadius: '24px 24px 0 0', padding: '0 20px 28px', zIndex: 50, animation: 'slideUp 0.35s ease-out' }}>
+          <div className="absolute inset-0 z-40 flex flex-col justify-end" style={{ opacity: reviewClosing ? 0 : 1, transition: 'opacity 0.28s ease' }}>
+            <div className="absolute inset-0 bg-black/30" onClick={closeReview} />
+            <div style={{ position: 'relative', background: '#fff', borderRadius: '24px 24px 0 0', padding: '0 20px 28px', zIndex: 50, animation: reviewClosing ? 'none' : 'slideUp 0.35s ease-out', transform: reviewClosing ? 'translateY(100%)' : 'translateY(0)', transition: 'transform 0.28s ease' }}>
               <div style={{ width: 40, height: 4, background: '#D1D5DB', borderRadius: 999, margin: '12px auto 0' }} />
               {showSubmitSuccess ? (
                 <div style={{ textAlign: 'center', padding: '32px 0 16px' }}>
@@ -1705,15 +1745,23 @@ export default function App() {
    SECTION HEADER HELPER
    ══════════════════════════════════ */
 function Section({ title, children, seeAll = true, subtitle }) {
+  const [showHint, setShowHint] = useState(false);
+  const hintTimer = useRef(null);
+  const handleSeeAll = () => { clearTimeout(hintTimer.current); setShowHint(true); hintTimer.current = setTimeout(() => setShowHint(false), 2500); };
   return (
-    <div style={{ marginTop: 20, marginBottom: 4 }}>
+    <div style={{ marginTop: 20, marginBottom: 4, position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
         <div>
           <h2 style={{ fontSize: 19, fontWeight: 700, color: '#111827', fontFamily: SYS }}>{title}</h2>
           {subtitle && <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2, fontFamily: SYS }}>⏱ {subtitle}</p>}
         </div>
-        {seeAll && <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEAL, fontSize: 13, fontWeight: 500, fontFamily: SYS }}>See all ›</button>}
+        {seeAll && <button onClick={handleSeeAll} style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEAL, fontSize: 13, fontWeight: 500, fontFamily: SYS }}>See all ›</button>}
       </div>
+      {showHint && (
+        <div style={{ position: 'absolute', top: 0, right: 16, background: '#1F2937', color: '#fff', fontSize: 11, fontFamily: SYS, padding: '6px 12px', borderRadius: 8, zIndex: 10, animation: 'fadeIn 0.2s ease', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          Coming soon
+        </div>
+      )}
       {children}
     </div>
   );
@@ -1732,6 +1780,7 @@ function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQue
   /* Pull-to-refresh */
   const [pullY, setPullY] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshDone, setRefreshDone] = useState(false);
   const pullStartY = useRef(null);
   const containerRef = useRef(null);
 
@@ -1746,7 +1795,7 @@ function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQue
     if (pullY > 45 && !refreshing) {
       setRefreshing(true);
       haptic(15);
-      setTimeout(() => { setRefreshing(false); setPullY(0); }, 800);
+      setTimeout(() => { setRefreshing(false); setRefreshDone(true); setTimeout(() => { setRefreshDone(false); setPullY(0); }, 600); }, 800);
     } else {
       setPullY(0);
     }
@@ -1767,18 +1816,18 @@ function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQue
       style={{ paddingTop: 2, paddingBottom: 8 }}
     >
       {/* Pull-to-refresh indicator */}
-      {(pullY > 0 || refreshing) && (
+      {(pullY > 0 || refreshing || refreshDone) && (
         <div style={{
-          height: refreshing ? 40 : pullY,
+          height: refreshing || refreshDone ? 40 : pullY,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: refreshing ? 'none' : 'height 0.15s ease',
           overflow: 'hidden',
         }}>
           <span style={{
             fontSize: 18,
-            animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
-            opacity: pullY > 20 || refreshing ? 1 : pullY / 20,
-          }}>🌿</span>
+            animation: refreshing ? 'spin 0.8s linear infinite' : refreshDone ? 'none' : 'none',
+            opacity: pullY > 20 || refreshing || refreshDone ? 1 : pullY / 20,
+          }}>{refreshDone ? '✓' : '🌿'}</span>
         </div>
       )}
       {/* Weekly summary card */}
@@ -1812,6 +1861,7 @@ function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQue
             color: activeFilter === f ? '#fff' : '#374151',
             fontSize: 13, fontWeight: activeFilter === f ? 600 : 400,
             whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0, fontFamily: SYS,
+            transition: 'all 0.15s ease',
           }}>{f}</button>
         ))}
       </div>
@@ -1994,7 +2044,7 @@ function QuestScreen({ xpAnimated, ecoPoints, lifetimePoints, claimedQuests, han
       <Section title="🏅 Badges">
         <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 16px 4px', scrollSnapType: 'x mandatory' }}>
           {badges.map(b => (
-            <div key={b.id} style={{ flexShrink: 0, scrollSnapAlign: 'start', width: 76, background: '#fff', borderRadius: 16, border: b.earned ? `1.5px solid ${TEAL}` : '1.5px solid #E5E7EB', padding: '10px 8px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', opacity: b.earned ? 1 : 0.4, filter: b.earned ? 'none' : 'grayscale(1)' }}>
+            <div key={b.id} style={{ flexShrink: 0, scrollSnapAlign: 'start', width: 76, background: '#fff', borderRadius: 16, border: b.earned ? `1.5px solid ${TEAL}` : '1.5px solid #E5E7EB', padding: '10px 8px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', opacity: b.earned ? 1 : 0.55, filter: b.earned ? 'none' : 'grayscale(0.8)' }}>
               <span style={{ fontSize: 28, display: 'block' }}>{b.earned ? b.emoji : '🔒'}</span>
               <p style={{ fontSize: 9, fontWeight: 600, color: '#111827', marginTop: 5, lineHeight: 1.3, fontFamily: SYS }}>{b.name}</p>
             </div>
@@ -2154,6 +2204,8 @@ function StreakCalendar() {
    REWARDS SHOP — full-screen modal
    ══════════════════════════════════ */
 function RewardsShop({ ecoPoints, lifetimePoints, redeemedRewards, redeemReward, onClose }) {
+  const [closing, setClosing] = useState(false);
+  const animClose = useCallback(() => { setClosing(true); setTimeout(onClose, 280); }, [onClose]);
   const [confirmingId, setConfirmingId] = useState(null);
   const [justRedeemed, setJustRedeemed] = useState(null);
   const tier = getTier(lifetimePoints);
@@ -2186,11 +2238,11 @@ function RewardsShop({ ecoPoints, lifetimePoints, redeemedRewards, redeemReward,
   const redeemCount = (id) => redeemedRewards.filter(r => r.id === id).length;
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col" style={{ background: BG }}>
+    <div className="absolute inset-0 z-50 flex flex-col" style={{ background: BG, opacity: closing ? 0 : 1, transform: closing ? 'translateY(30px)' : 'translateY(0)', transition: 'opacity 0.28s ease, transform 0.28s ease', animation: closing ? 'none' : 'slideUp 0.3s ease-out' }}>
       {/* Header */}
       <div style={{ background: `linear-gradient(160deg, ${TEAL} 0%, #4A9A7E 100%)`, padding: '14px 20px 20px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={animClose} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
           </button>
           <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', fontFamily: SYS }}>Rewards Shop</h2>
