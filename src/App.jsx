@@ -21,15 +21,15 @@ const ORANGE = '#F59316';
 const INACTIVE = '#9CA3AF';
 const BG = '#F5F3EE';
 
-/* ─── Mock "current time" for urgency logic: 17:15 ─── */
-const MOCK_NOW_MINS = 17 * 60 + 15;
+/* ─── Current time in minutes for urgency logic ─── */
+function getNowMins() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 const SYS = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 /* ─── Helpers ─── */
 function haptic(ms = 10) { try { navigator.vibrate?.(ms); } catch {} }
 function parseMins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 function isEndingSoon(store) {
-  const diff = parseMins(store.collectTimeEnd) - MOCK_NOW_MINS;
+  const diff = parseMins(store.collectTimeEnd) - getNowMins();
   return diff > 0 && diff <= 60;
 }
 
@@ -150,12 +150,17 @@ function getWeeklyReset() {
   return `${d}d ${h}h ${m}m`;
 }
 
-const CLASSMATE_FEED = [
-  { id: 'cf1', name: 'Lukas G.', avatar: '🧑', color: '#DBEAFE', store: 'Barista Specialty Coffee', time: '2 min ago', pts: 15 },
-  { id: 'cf2', name: 'Nina T.', avatar: '👩', color: '#FCE7F3', store: 'Confiserie Roggwiller', time: '18 min ago', pts: 15 },
-  { id: 'cf3', name: 'Mateo O.', avatar: '🧔', color: '#D1FAE5', store: 'Migros Marktplatz', time: '34 min ago', pts: 15 },
-  { id: 'cf4', name: 'Ainhoa E.', avatar: '👱', color: '#FEF3C7', store: 'Esswerk', time: '1h ago', pts: 15 },
+function randomTimeAgo() {
+  const mins = Math.floor(Math.random() * 55) + 2;
+  return mins < 60 ? `${mins} min ago` : '1h ago';
+}
+const CLASSMATE_FEED_BASE = [
+  { id: 'cf1', name: 'Lukas G.', avatar: '🧑', color: '#DBEAFE', store: 'Barista Specialty Coffee', pts: 15 },
+  { id: 'cf2', name: 'Nina T.', avatar: '👩', color: '#FCE7F3', store: 'Confiserie Roggwiller', pts: 15 },
+  { id: 'cf3', name: 'Mateo O.', avatar: '🧔', color: '#D1FAE5', store: 'Migros Marktplatz', pts: 15 },
+  { id: 'cf4', name: 'Ainhoa E.', avatar: '👱', color: '#FEF3C7', store: 'Esswerk', pts: 15 },
 ];
+const CLASSMATE_FEED = CLASSMATE_FEED_BASE.map(c => ({ ...c, time: randomTimeAgo() }));
 
 /* ─── Confetti ─── */
 function fireConfetti(canvas) {
@@ -432,7 +437,7 @@ function StoreCardWide({ store, tagData, setReviewStore, ix }) {
    BROWSE / FAVOURITES LIST ITEM
    ══════════════════════════════════ */
 function BrowseListItem({ store, ix, setReviewStore }) {
-  const { bagCounts, favourites, toggleFav, heartAnim, flashBags, openStore, nowMins } = ix;
+  const { bagCounts, favourites, toggleFav, heartAnim, flashBags, openStore, nowMins, tagData } = ix;
   const bags = bagCounts[store.id] ?? store.bags;
   const isFav = favourites.has(store.id);
   const sold = bags === 0;
@@ -470,6 +475,11 @@ function BrowseListItem({ store, ix, setReviewStore }) {
         }}>
           {sold ? 'Sold out' : `${bags} left`}
         </div>
+        {store.logo && (
+          <div style={{ position: 'absolute', bottom: 4, right: 4, width: 24, height: 24, borderRadius: 6, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={store.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
+        )}
       </div>
 
       {/* Details */}
@@ -481,6 +491,18 @@ function BrowseListItem({ store, ix, setReviewStore }) {
           <StarIcon size={11} color="#F59E0B" />
           <span style={{ fontSize: 11, fontWeight: 600, color: '#374151', fontFamily: SYS }}>{store.rating}</span>
         </div>
+        {tagData && tagData[store.id] && (() => {
+          const top = getTopTags(tagData[store.id], 2);
+          return top.length > 0 ? (
+            <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+              {top.map(t => (
+                <span key={t.key} style={{ fontSize: 9, padding: '1px 6px', borderRadius: 999, background: '#F0FDF4', color: '#065F46', fontFamily: SYS, fontWeight: 500 }}>
+                  {TAG_EMOJI[t.key] || ''} {t.label}
+                </span>
+              ))}
+            </div>
+          ) : null;
+        })()}
       </div>
 
       {/* Right side: price + heart */}
@@ -633,7 +655,7 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
                     ))}
                   </div>
                   <button
-                    onClick={() => { animClose(); ix.openStore(null); setTimeout(() => document.getElementById('tab-profile')?.click(), 100); }}
+                    onClick={() => { animClose(); ix.openStore(null); setTimeout(() => ix.switchTab('profile'), 100); }}
                     style={{ background: '#F3F4F6', border: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 12, fontFamily: SYS, padding: '8px 20px', borderRadius: 999, fontWeight: 600 }}
                   >
                     See your full impact →
@@ -679,7 +701,7 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
 
                   {/* Action buttons */}
                   <button
-                    onClick={() => { animClose(); ix.openStore(null); setTimeout(() => document.getElementById('tab-profile')?.click(), 100); }}
+                    onClick={() => { animClose(); ix.openStore(null); setTimeout(() => ix.switchTab('profile'), 100); }}
                     style={{
                       marginTop: 12, width: '100%', padding: '12px 0', borderRadius: 12,
                       background: TEAL, border: 'none', color: '#fff',
@@ -705,10 +727,17 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
             ) : (
               <>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <div style={{ flex: 1 }}>
-                    <h2 style={{ fontSize: 22, fontWeight: 700, color: '#111827', fontFamily: SYS, lineHeight: 1.2 }}>{store.name}</h2>
-                    <p style={{ fontSize: 13, color: '#9CA3AF', marginTop: 2, fontFamily: SYS }}>{store.category}</p>
-                    <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1, fontFamily: SYS }}>📍 {store.address}</p>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1 }}>
+                    {store.logo && (
+                      <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#fff', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src={store.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <h2 style={{ fontSize: 22, fontWeight: 700, color: '#111827', fontFamily: SYS, lineHeight: 1.2 }}>{store.name}</h2>
+                      <p style={{ fontSize: 13, color: '#9CA3AF', marginTop: 2, fontFamily: SYS }}>{store.category}</p>
+                      <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1, fontFamily: SYS }}>📍 {store.address}</p>
+                    </div>
                   </div>
                   <button
                     onClick={(e) => {
@@ -1100,8 +1129,8 @@ export default function App() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   useEffect(() => {
-    const fadeTimer = setTimeout(() => setSplashFading(true), 1400);
-    const hideTimer = setTimeout(() => setSplashVisible(false), 1900);
+    const fadeTimer = setTimeout(() => setSplashFading(true), 1600);
+    const hideTimer = setTimeout(() => setSplashVisible(false), 2200);
     return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
   }, []);
 
@@ -1145,7 +1174,8 @@ export default function App() {
     });
   }, [activeTab]);
   const [xpAnimated, setXpAnimated] = useState(false);
-  const [nowMins, setNowMins] = useState(MOCK_NOW_MINS);
+  const [nowMins, setNowMins] = useState(getNowMins);
+  useEffect(() => { const id = setInterval(() => setNowMins(getNowMins()), 60000); return () => clearInterval(id); }, []);
 
   /* ─ Store state ─ */
   const [bagCounts, setBagCounts] = useState(() => Object.fromEntries(stores.map(s => [s.id, s.bags])));
@@ -1413,7 +1443,7 @@ export default function App() {
   const dismissNotif = useCallback(() => { setShowNotif(false); setBellDot(false); }, []);
 
   /* ─── interaction bundle ─── */
-  const ix = { bagCounts, favourites, toggleFav, heartAnim, flashBags, openStore: setSelectedStore, nowMins, reservedStores, taggedStores, handleReserve, reservations };
+  const ix = { bagCounts, favourites, toggleFav, heartAnim, flashBags, openStore: setSelectedStore, nowMins, reservedStores, taggedStores, handleReserve, reservations, switchTab, tagData };
 
   /* ─── undo reservation toast ─── */
   const [undoToast, setUndoToast] = useState(null); // { store, timer }
@@ -1468,10 +1498,11 @@ export default function App() {
         {splashVisible && (
           <div style={{
             position: 'absolute', inset: 0, zIndex: 9999,
-            background: `linear-gradient(160deg, ${TEAL} 0%, #4A9A7E 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: `linear-gradient(160deg, ${TEAL} 0%, #4A9A7E 50%, ${DARK_TEAL} 100%)`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
             opacity: splashFading ? 0 : 1,
-            transition: 'opacity 0.5s ease',
+            transform: splashFading ? 'scale(1.05)' : 'scale(1)',
+            transition: 'opacity 0.6s ease, transform 0.6s ease',
           }}>
             <img
               src="/stores/tgtg-logo.svg.png"
@@ -1482,6 +1513,9 @@ export default function App() {
                 animation: 'splashLogo 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both',
               }}
             />
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 600, fontFamily: SYS, animation: 'splashLogo 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both' }}>
+              Save food. Save money.
+            </p>
           </div>
         )}
 
@@ -1539,10 +1573,10 @@ export default function App() {
         <div ref={contentRef} className="flex-1 overflow-y-auto no-scrollbar pb-20" style={{ background: BG, animation: `tabEnter 0.25s ease` }}>
           {isLoading && activeTab === 'home' ? <SkeletonHome /> : activeTab === 'home' && (
             <HomeScreen tagData={tagData} filters={filters} activeFilter={activeFilter} setActiveFilter={setActiveFilter}
-              searchQuery={searchQuery} setSearchQuery={setSearchQuery} setReviewStore={openReviewStore} ix={ix} />
+              searchQuery={searchQuery} setSearchQuery={setSearchQuery} setReviewStore={openReviewStore} ix={ix} reservations={reservations} />
           )}
           {isLoading && activeTab === 'stores' ? <SkeletonBrowse /> : activeTab === 'stores' && <BrowseScreen tagData={tagData} setReviewStore={openReviewStore} ix={ix} handleReserve={handleReserve} searchQuery={searchQuery} />}
-          {activeTab === 'profile' && <ProfileScreen ecoPoints={ecoPoints} lifetimePoints={lifetimePoints} bagsSaved={bagsReservedCount} activityFeed={activityFeed} setActiveTab={switchTab} lastImpactData={lastImpactData} onOpenRewards={() => setShowRewardsShop(true)} reservations={reservations} updateReservationStatus={updateReservationStatus} />}
+          {activeTab === 'profile' && <ProfileScreen ecoPoints={ecoPoints} lifetimePoints={lifetimePoints} bagsSaved={bagsReservedCount} activityFeed={activityFeed} setActiveTab={switchTab} lastImpactData={lastImpactData} onOpenRewards={() => setShowRewardsShop(true)} reservations={reservations} updateReservationStatus={updateReservationStatus} onOpenStore={setSelectedStore} />}
           {isLoading && activeTab === 'quest' ? <SkeletonQuest /> : activeTab === 'quest' && <QuestScreen xpAnimated={xpAnimated} ecoPoints={ecoPoints} lifetimePoints={lifetimePoints} claimedQuests={claimedQuests} handleClaim={handleClaim} questProgress={questProgress} onOpenRewards={() => setShowRewardsShop(true)} />}
           {isLoading && activeTab === 'favourites' ? <SkeletonFavourites /> : activeTab === 'favourites' && <FavouritesScreen favourites={favourites} ix={ix} setReviewStore={openReviewStore} reservations={reservations} />}
 
@@ -1812,7 +1846,7 @@ function Section({ title, children, seeAll = true, subtitle }) {
 /* ══════════════════════════════════
    HOME SCREEN
    ══════════════════════════════════ */
-function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQuery, setSearchQuery, setReviewStore, ix }) {
+function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQuery, setSearchQuery, setReviewStore, ix, reservations = [] }) {
   const filter = s => matchesFilter(s, activeFilter, tagData, ix.bagCounts, ix.nowMins) && matchesSearch(s, searchQuery);
   const recommended = stores.filter(s => s.section === 'recommended').filter(filter);
   const saveSoon = stores.filter(s => s.section === 'save_soon').filter(filter);
@@ -1877,11 +1911,17 @@ function HomeScreen({ tagData, filters, activeFilter, setActiveFilter, searchQue
         <div style={{ position: 'absolute', top: -20, right: -10, fontSize: 64, opacity: 0.1, transform: 'rotate(-15deg)' }}>🌍</div>
         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 6, fontFamily: SYS }}>YOUR WEEK SO FAR</p>
         <div style={{ display: 'flex', gap: 16 }}>
-          {[
-            { val: '3', label: 'bags saved', icon: '🛍️' },
-            { val: '7.5kg', label: 'CO₂ avoided', icon: '🌫️' },
-            { val: 'CHF 24', label: 'saved', icon: '💰' },
-          ].map(s => (
+          {(() => {
+            const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekBags = reservations.filter(r => new Date(r.reservedAt) >= weekAgo).length;
+            const co2 = (weekBags * 2.5).toFixed(1);
+            const saved = weekBags * 8;
+            return [
+              { val: String(weekBags), label: 'bags saved', icon: '🛍️' },
+              { val: `${co2}kg`, label: 'CO₂ avoided', icon: '🌫️' },
+              { val: `CHF ${saved}`, label: 'saved', icon: '💰' },
+            ];
+          })().map(s => (
             <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 16 }}>{s.icon}</span>
               <div>
@@ -2034,10 +2074,10 @@ function QuestScreen({ xpAnimated, ecoPoints, lifetimePoints, claimedQuests, han
     return () => clearInterval(id);
   }, []);
 
-  // Live leaderboard (update "You" row with current points)
+  // Live leaderboard (update "You" row with lifetime points — not spendable ecoPoints)
   const origRanks = Object.fromEntries(leaderboard.map(e => [e.name, e.rank]));
   const liveBoard = [...leaderboard]
-    .map(e => e.isYou ? { ...e, points: ecoPoints } : e)
+    .map(e => e.isYou ? { ...e, points: lifetimePoints } : e)
     .sort((a, b) => b.points - a.points)
     .map((e, i) => ({ ...e, rank: i + 1, prevRank: origRanks[e.name] || i + 1 }));
 
@@ -2168,7 +2208,7 @@ function FavouritesScreen({ favourites, ix, setReviewStore, reservations = [] })
           <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', marginBottom: 6, fontFamily: SYS }}>No favourites yet</p>
           <p style={{ fontSize: 13, color: '#9CA3AF', fontFamily: SYS, marginBottom: 20, lineHeight: 1.5 }}>Tap the heart on any store to save it here for quick access.</p>
           <button
-            onClick={() => ix.openStore && document.getElementById('tab-home')?.click()}
+            onClick={() => ix.switchTab && ix.switchTab('home')}
             style={{ padding: '10px 24px', borderRadius: 999, background: TEAL, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', fontFamily: SYS }}
           >Browse stores</button>
         </div>
@@ -2429,7 +2469,7 @@ function RewardsShop({ ecoPoints, lifetimePoints, redeemedRewards, redeemReward,
 /* ══════════════════════════════════
    PROFILE / MORE SCREEN
    ══════════════════════════════════ */
-function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, setActiveTab, lastImpactData, onOpenRewards, reservations = [], updateReservationStatus }) {
+function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, setActiveTab, lastImpactData, onOpenRewards, reservations = [], updateReservationStatus, onOpenStore }) {
   const earnedBadges = badges.filter(b => b.earned);
   const [showLastImpact, setShowLastImpact] = useState(false);
 
@@ -2500,12 +2540,16 @@ function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, set
 
   const ReservationCard = ({ r, muted }) => {
     const pickup = getPickupLabel(r);
+    const storeObj = stores.find(s => s.id === r.bagId);
     return (
-      <div style={{
-        background: '#fff', borderRadius: 16, border: '1px solid #F3F4F6',
-        padding: '14px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        opacity: muted ? 0.6 : 1, transition: 'opacity 0.2s',
-      }}>
+      <div
+        onClick={() => storeObj && onOpenStore && onOpenStore(storeObj)}
+        style={{
+          background: '#fff', borderRadius: 16, border: '1px solid #F3F4F6',
+          padding: '14px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+          opacity: muted ? 0.6 : 1, transition: 'opacity 0.2s',
+          cursor: storeObj ? 'pointer' : 'default',
+        }}>
         {/* Status badge */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           {statusBadge(r)}
@@ -2554,7 +2598,7 @@ function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, set
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
           <p style={{ fontSize: 11, color: '#9CA3AF', fontFamily: SYS, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, marginRight: 8 }}>📍 {r.storeAddress}</p>
           <button
-            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${r.storeLatitude},${r.storeLongitude}`, '_blank')}
+            onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps/dir/?api=1&destination=${r.storeLatitude},${r.storeLongitude}`, '_blank'); }}
             style={{ padding: '5px 12px', borderRadius: 10, background: '#F3F4F6', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: TEAL, fontFamily: SYS, flexShrink: 0 }}
           >
             Get Directions
@@ -2565,12 +2609,12 @@ function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, set
         {!muted && (
           <div style={{ marginTop: 8, borderTop: '1px solid #F3F4F6', paddingTop: 8, display: 'flex', gap: 8 }}>
             {r.status === 'reserved' && (
-              <button onClick={() => updateReservationStatus(r.id, 'ready')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#9CA3AF', fontFamily: SYS, padding: 0 }}>
+              <button onClick={(e) => { e.stopPropagation(); updateReservationStatus(r.id, 'ready'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#9CA3AF', fontFamily: SYS, padding: 0 }}>
                 Simulate: Mark Ready →
               </button>
             )}
             {r.status === 'ready' && (
-              <button onClick={() => updateReservationStatus(r.id, 'picked_up')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#9CA3AF', fontFamily: SYS, padding: 0 }}>
+              <button onClick={(e) => { e.stopPropagation(); updateReservationStatus(r.id, 'picked_up'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#9CA3AF', fontFamily: SYS, padding: 0 }}>
                 Simulate: Mark Picked Up →
               </button>
             )}
