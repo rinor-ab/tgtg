@@ -1530,8 +1530,8 @@ export default function App() {
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: notifStore?.bgColor || '#888', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <span style={{ fontSize: 18 }}>{notifStore?.emoji || '🛒'}</span>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, position: 'relative' }}>
+                    <img src={notifStore?.logo} alt={notifStore?.name} style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
                     {/* Notification type badge */}
                     <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 12, lineHeight: 1 }}>{notifType?.icon || '🔔'}</span>
                   </div>
