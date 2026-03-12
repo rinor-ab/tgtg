@@ -555,6 +555,8 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
   };
   const bags = bagCounts[store.id] ?? store.bags;
   const sold = bags === 0;
+  const closed = parseMins(store.collectTimeEnd) <= getNowMins() || getNowMins() < parseMins(store.collectTimeStart);
+  const cantReserve = sold || closed;
   const allTags = getAllTags(tagData[store.id]);
   const { favourites, toggleFav, heartAnim, reservedStores, taggedStores } = ix;
   const isFav = favourites.has(store.id);
@@ -564,7 +566,7 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
   const co2Data = getCo2ForStore(store);
 
   const handleReserve = () => {
-    if (sold) return;
+    if (cantReserve) return;
     if (reserveState === 'idle') {
       setReserveState('confirming');
       confirmTimerRef.current = setTimeout(() => setReserveState('idle'), 3000);
@@ -835,17 +837,17 @@ function StoreDetailSheet({ store, tagData, bagCounts, onClose, onReserve, ix, s
         {!success && (
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 28px', background: '#fff', borderTop: '1px solid #F3F4F6' }}>
             <button
-              disabled={sold}
+              disabled={cantReserve}
               onClick={handleReserve}
               style={{
                 width: '100%', padding: '15px 0', borderRadius: 16, fontSize: 15, fontWeight: 700,
-                border: 'none', cursor: sold ? 'not-allowed' : 'pointer',
-                background: sold ? '#E5E7EB' : reserveState === 'confirming' ? '#FF6B35' : TEAL,
-                color: sold ? '#9CA3AF' : '#fff', fontFamily: SYS,
+                border: 'none', cursor: cantReserve ? 'not-allowed' : 'pointer',
+                background: cantReserve ? '#E5E7EB' : reserveState === 'confirming' ? '#FF6B35' : TEAL,
+                color: cantReserve ? '#9CA3AF' : '#fff', fontFamily: SYS,
                 position: 'relative', overflow: 'hidden', transition: 'background 0.2s',
               }}
             >
-              {sold ? 'Sold Out' : reserveState === 'confirming' ? 'Confirm Reservation ✓' : `Reserve ${bagQty > 1 ? `${bagQty} Bags` : 'Bag'} · CHF ${totalPrice}`}
+              {sold ? 'Sold Out' : closed ? 'Store Closed' : reserveState === 'confirming' ? 'Confirm Reservation ✓' : `Reserve ${bagQty > 1 ? `${bagQty} Bags` : 'Bag'} · CHF ${totalPrice}`}
               {reserveState === 'confirming' && (
                 <span style={{
                   position: 'absolute', bottom: 0, left: 0, height: 3,
@@ -2472,6 +2474,7 @@ function RewardsShop({ ecoPoints, lifetimePoints, redeemedRewards, redeemReward,
 function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, setActiveTab, lastImpactData, onOpenRewards, reservations = [], updateReservationStatus, onOpenStore }) {
   const earnedBadges = badges.filter(b => b.earned);
   const [showLastImpact, setShowLastImpact] = useState(false);
+  const [resExpanded, setResExpanded] = useState(() => reservations.some(r => r.status === 'reserved' || r.status === 'ready'));
 
   // Check for missed pickups
   const now = new Date();
@@ -2626,39 +2629,57 @@ function ProfileScreen({ ecoPoints, lifetimePoints, bagsSaved, activityFeed, set
 
   return (
     <div style={{ paddingBottom: 8 }}>
-      {/* My Reservations — most prominent section */}
-      <div style={{ padding: '16px 16px 0' }}>
-        <h2 style={{ fontSize: 19, fontWeight: 700, color: '#111827', marginBottom: 12, fontFamily: SYS }}>🛒 My Reservations</h2>
-        {activeRes.length === 0 && pastRes.length === 0 ? (
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #F3F4F6', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 12 }}>
-            <div style={{ width: 72, height: 72, borderRadius: '50%', background: TEAL + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-              <span style={{ fontSize: 32 }}>🛍️</span>
-            </div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 4, fontFamily: SYS }}>No bags reserved yet</p>
-            <p style={{ fontSize: 12, color: '#9CA3AF', fontFamily: SYS, marginBottom: 16 }}>Reserve a surprise bag and pick it up today!</p>
-            <button onClick={() => setActiveTab('home')} style={{ padding: '10px 24px', borderRadius: 999, background: TEAL, color: '#fff', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer', fontFamily: SYS }}>
-              Browse Stores
-            </button>
-          </div>
-        ) : (
-          <>
+      {/* My Reservations — collapsible */}
+      <div style={{ margin: '16px 16px 0', background: '#fff', borderRadius: 16, border: '1px solid #F3F4F6', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+        <button
+          onClick={() => setResExpanded(p => !p)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 17 }}>🛒</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#111827', fontFamily: SYS }}>My Reservations</span>
             {activeRes.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontFamily: SYS }}>Active ({activeRes.length})</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {activeRes.map(r => <ReservationCard key={r.id} r={r} muted={false} />)}
-                </div>
-              </div>
+              <span style={{ background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, fontFamily: SYS }}>{activeRes.length} active</span>
             )}
-            {pastRes.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontFamily: SYS }}>Past ({pastRes.length})</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {pastRes.map(r => <ReservationCard key={r.id} r={r} muted={true} />)}
-                </div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: resExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease' }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        {resExpanded && (
+          <div style={{ padding: '0 16px 14px' }}>
+            {activeRes.length === 0 && pastRes.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <p style={{ fontSize: 13, color: '#9CA3AF', fontFamily: SYS, marginBottom: 10 }}>No reservations yet</p>
+                <button onClick={() => setActiveTab('home')} style={{ padding: '8px 20px', borderRadius: 999, background: TEAL, color: '#fff', fontWeight: 700, fontSize: 12, border: 'none', cursor: 'pointer', fontFamily: SYS }}>
+                  Browse Stores
+                </button>
               </div>
+            ) : (
+              <>
+                {activeRes.length > 0 && (
+                  <div style={{ marginBottom: pastRes.length > 0 ? 14 : 0 }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontFamily: SYS }}>Active ({activeRes.length})</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {activeRes.map(r => <ReservationCard key={r.id} r={r} muted={false} />)}
+                    </div>
+                  </div>
+                )}
+                {pastRes.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontFamily: SYS }}>Past ({pastRes.length})</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {pastRes.map(r => <ReservationCard key={r.id} r={r} muted={true} />)}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
-          </>
+          </div>
         )}
       </div>
 
