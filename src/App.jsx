@@ -1808,10 +1808,13 @@ export default function App() {
 /* ══════════════════════════════════
    SECTION HEADER HELPER
    ══════════════════════════════════ */
-function Section({ title, children, seeAll = true, subtitle }) {
+function Section({ title, children, seeAll = true, onSeeAll, subtitle }) {
   const [showHint, setShowHint] = useState(false);
   const hintTimer = useRef(null);
-  const handleSeeAll = () => { clearTimeout(hintTimer.current); setShowHint(true); hintTimer.current = setTimeout(() => setShowHint(false), 2500); };
+  const handleSeeAll = () => {
+    if (onSeeAll) { onSeeAll(); return; }
+    clearTimeout(hintTimer.current); setShowHint(true); hintTimer.current = setTimeout(() => setShowHint(false), 2500);
+  };
   return (
     <div style={{ marginTop: 20, marginBottom: 4, position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
@@ -2057,6 +2060,7 @@ function QuestScreen({ xpAnimated, ecoPoints, lifetimePoints, claimedQuests, han
   const pctLevel = Math.round((ptsInLevel / 500) * 100);
   const ptsToNext = 500 - ptsInLevel;
   const [resetStr, setResetStr] = useState(getWeeklyReset);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setResetStr(getWeeklyReset()), 60000);
     return () => clearInterval(id);
@@ -2111,7 +2115,7 @@ function QuestScreen({ xpAnimated, ecoPoints, lifetimePoints, claimedQuests, han
       </div>
 
       {/* Badges */}
-      <Section title="🏅 Badges">
+      <Section title="🏅 Badges" onSeeAll={() => setShowAllBadges(true)}>
         <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 16px 4px', scrollSnapType: 'x mandatory' }}>
           {badges.map(b => (
             <div key={b.id} style={{ flexShrink: 0, scrollSnapAlign: 'start', width: 76, background: '#fff', borderRadius: 16, border: b.earned ? `1.5px solid ${TEAL}` : '1.5px solid #E5E7EB', padding: '10px 8px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', opacity: b.earned ? 1 : 0.55, filter: b.earned ? 'none' : 'grayscale(0.8)' }}>
@@ -2121,6 +2125,39 @@ function QuestScreen({ xpAnimated, ecoPoints, lifetimePoints, claimedQuests, han
           ))}
         </div>
       </Section>
+
+      {/* All Badges overlay */}
+      {showAllBadges && (
+        <div style={{ position: 'fixed', inset: 0, background: BG, zIndex: 9999, overflowY: 'auto', animation: 'fadeIn 0.2s ease' }}>
+          <div style={{ position: 'sticky', top: 0, background: BG, padding: '16px 16px 12px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #E5E7EB', zIndex: 1 }}>
+            <button onClick={() => setShowAllBadges(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#111827', padding: 4 }}>←</button>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', fontFamily: SYS }}>All Badges</h2>
+            <span style={{ fontSize: 13, color: '#9CA3AF', fontFamily: SYS, marginLeft: 'auto' }}>{badges.filter(b => b.earned).length}/{badges.length} earned</span>
+          </div>
+          <div style={{ padding: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: SYS, marginBottom: 12 }}>Earned</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+              {badges.filter(b => b.earned).map(b => (
+                <div key={b.id} style={{ background: '#fff', borderRadius: 16, border: `1.5px solid ${TEAL}`, padding: '14px 10px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                  <span style={{ fontSize: 34, display: 'block' }}>{b.emoji}</span>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#111827', marginTop: 6, fontFamily: SYS }}>{b.name}</p>
+                  <p style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, lineHeight: 1.3, fontFamily: SYS }}>{b.desc}</p>
+                </div>
+              ))}
+            </div>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: SYS, marginBottom: 12 }}>Locked</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              {badges.filter(b => !b.earned).map(b => (
+                <div key={b.id} style={{ background: '#fff', borderRadius: 16, border: '1.5px solid #E5E7EB', padding: '14px 10px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', opacity: 0.6 }}>
+                  <span style={{ fontSize: 34, display: 'block' }}>🔒</span>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#111827', marginTop: 6, fontFamily: SYS }}>{b.name}</p>
+                  <p style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, lineHeight: 1.3, fontFamily: SYS }}>{b.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Active Quests */}
       <Section title="🎯 Active Quests" seeAll={false} subtitle={`Resets in ${resetStr}`}>

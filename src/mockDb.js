@@ -316,12 +316,22 @@ export const quests = [
 ];
 
 export const badges = [
-    { id: 'b1', name: 'Eco Starter', emoji: '🌱', earned: true },
-    { id: 'b2', name: 'First Review', emoji: '⭐', earned: true },
-    { id: 'b3', name: '3-Day Streak', emoji: '🔥', earned: true },
-    { id: 'b4', name: 'Explorer', emoji: '🧭', earned: false },
-    { id: 'b5', name: 'Champion', emoji: '🏆', earned: false },
-    { id: 'b6', name: 'Earth Saver', emoji: '🌍', earned: false },
+    { id: 'b1', name: 'Eco Starter', emoji: '🌱', earned: true, desc: 'Save your first surprise bag' },
+    { id: 'b2', name: 'First Review', emoji: '⭐', earned: true, desc: 'Leave your first community tag' },
+    { id: 'b3', name: '3-Day Streak', emoji: '🔥', earned: true, desc: 'Save bags 3 days in a row' },
+    { id: 'b4', name: 'Explorer', emoji: '🧭', earned: true, desc: 'Try 5 different stores' },
+    { id: 'b5', name: 'Night Owl', emoji: '🦉', earned: true, desc: 'Pick up a bag after 8 PM' },
+    { id: 'b6', name: 'Veggie Hero', emoji: '🥬', earned: true, desc: 'Save 3 bags from veggie stores' },
+    { id: 'b7', name: 'Early Bird', emoji: '🐦', earned: true, desc: 'Reserve a bag within 1 min of posting' },
+    { id: 'b8', name: 'Tag Master', emoji: '🏷️', earned: true, desc: 'Leave 10 community tags' },
+    { id: 'b9', name: '7-Day Streak', emoji: '💪', earned: false, desc: 'Save bags 7 days in a row' },
+    { id: 'b10', name: 'Champion', emoji: '🏆', earned: false, desc: 'Reach the top 3 on the leaderboard' },
+    { id: 'b11', name: 'Earth Saver', emoji: '🌍', earned: false, desc: 'Save 50 kg of CO₂' },
+    { id: 'b12', name: 'Social Butterfly', emoji: '🦋', earned: false, desc: 'Invite 5 friends who sign up' },
+    { id: 'b13', name: 'Bakery Lover', emoji: '🥐', earned: false, desc: 'Save 10 bags from bakeries' },
+    { id: 'b14', name: 'Zero Waste', emoji: '♻️', earned: false, desc: 'Complete all weekly quests for a month' },
+    { id: 'b15', name: 'Local Legend', emoji: '👑', earned: false, desc: 'Save 100 bags in St. Gallen' },
+    { id: 'b16', name: 'Sharing Hero', emoji: '🤝', earned: false, desc: 'Share 10 store recommendations' },
 ];
 
 export const leaderboard = [
