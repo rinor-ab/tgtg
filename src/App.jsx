@@ -22,7 +22,8 @@ const INACTIVE = '#9CA3AF';
 const BG = '#F5F3EE';
 
 /* ─── Current time in minutes for urgency logic ─── */
-function getNowMins() { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+// Fixed demo time 17:15 so stores always appear open during pickup windows
+function getNowMins() { return 17 * 60 + 15; }
 const SYS = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 /* ─── Helpers ─── */
