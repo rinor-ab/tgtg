@@ -3,6 +3,9 @@ import { initialTagData } from './mockDb';
 
 const TagDataContext = createContext(null);
 
+// Bump this version to force a full localStorage reset on next load
+const DATA_VERSION = 2;
+
 const STORAGE_KEYS = {
     tagData: 'tgtg_tagData',
     ecoPoints: 'tgtg_ecoPoints',
@@ -10,7 +13,14 @@ const STORAGE_KEYS = {
     redeemedRewards: 'tgtg_redeemedRewards',
     lifetimePoints: 'tgtg_lifetimePoints',
     reservations: 'tgtg_reservations',
+    dataVersion: 'tgtg_dataVersion',
 };
+
+// Clear all app data if version changed
+if (Number(localStorage.getItem(STORAGE_KEYS.dataVersion)) !== DATA_VERSION) {
+    Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(STORAGE_KEYS.dataVersion, DATA_VERSION);
+}
 
 function loadFromStorage(key, fallback) {
     try {
