@@ -1618,22 +1618,22 @@ export default function App() {
           </div>
         </div>
 
-        {/* ─── NOTIFICATION BANNER ─── */}
+        {/* ─── iOS-STYLE NOTIFICATION BANNER ─── */}
         <div
-          className="absolute left-0 right-0 px-3"
+          className="absolute left-0 right-0 px-2"
           style={{
             top: 0,
             zIndex: 9998,
-            transform: showNotif ? 'translateY(0)' : 'translateY(-100%)',
+            transform: showNotif ? 'translateY(0)' : 'translateY(-120%)',
             opacity: showNotif ? 1 : 0,
-            transition: 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 250ms ease',
+            transition: 'transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease',
             pointerEvents: showNotif ? 'auto' : 'none',
           }}
           onTouchStart={e => { notifTouchY.current = e.touches[0].clientY; }}
           onTouchMove={e => {
             if (notifTouchY.current === null) return;
             const dy = e.touches[0].clientY - notifTouchY.current;
-            if (dy < -40) { dismissNotif(); notifTouchY.current = null; }
+            if (dy < -30) { dismissNotif(); notifTouchY.current = null; }
           }}
           onTouchEnd={() => { notifTouchY.current = null; }}
         >
@@ -1641,43 +1641,28 @@ export default function App() {
             const bags = bagCounts[notifStore?.id] ?? notifStore?.bags;
             const msg = notifType?.getMsg?.(notifStore || stores[0], bags) || { title: notifStore?.name, body: '', cta: 'View' };
             return (
-              <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', border: '1px solid #F3F4F6', padding: 16, marginTop: 12, position: 'relative', overflow: 'hidden' }}>
-                {/* Auto-dismiss progress bar */}
-                {showNotif && (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3 }}>
-                    <div style={{ height: '100%', background: TEAL, borderRadius: '0 999px 999px 0', animation: 'notifProgress 14s linear forwards' }} />
-                  </div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, position: 'relative' }}>
-                    <img src={notifStore?.logo} alt={notifStore?.name} style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-                    <div style={{ display: 'none', width: 42, height: 42, borderRadius: 12, background: notifStore?.bgColor || '#888', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{notifStore?.emoji || '🛒'}</div>
-                    {/* Notification type badge */}
-                    <span style={{ position: 'absolute', top: -4, right: -4, fontSize: 12, lineHeight: 1 }}>{notifType?.icon || '🔔'}</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 2, fontFamily: SYS, lineHeight: 1.3 }}>
-                      {msg.title}
-                    </p>
-                    <p style={{ fontSize: 12, color: '#374151', marginBottom: 2, fontFamily: SYS }}>
-                      {msg.body}
-                    </p>
-                    <p style={{ fontSize: 10, color: '#9CA3AF', fontFamily: SYS }}>
-                      Based on {Object.values(tagData[notifStore?.id] || {}).reduce((s, v) => s + v, 0)} community tags
-                    </p>
-                  </div>
+              <div
+                onClick={() => { dismissNotif(); setSelectedStore(notifStore); }}
+                style={{
+                  background: 'rgba(249,249,249,0.97)',
+                  backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                  borderRadius: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.05)',
+                  padding: '12px 14px', marginTop: 8, cursor: 'pointer',
+                }}
+              >
+                {/* iOS header row: app icon + app name + timestamp */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <img src="/stores/tgtg-logo.svg.png" alt="TGTG" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'contain' }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: '#8E8E93', fontFamily: SYS, letterSpacing: '0.01em', flex: 1 }}>TGTG</span>
+                  <span style={{ fontSize: 12, color: '#8E8E93', fontFamily: SYS }}>now</span>
                 </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button
-                    onClick={() => { dismissNotif(); setSelectedStore(notifStore); }}
-                    style={{ flex: 1, background: TEAL, color: '#fff', fontSize: 12, fontWeight: 700, padding: '10px 0', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: SYS }}
-                  >{msg.cta}</button>
-                  <button onClick={dismissNotif}
-                    style={{ flex: 1, background: '#F3F4F6', color: '#6B7280', fontSize: 12, fontWeight: 700, padding: '10px 0', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: SYS }}
-                  >Dismiss</button>
-                </div>
-                {/* Drag handle hint */}
-                <div style={{ width: 32, height: 4, background: '#D1D5DB', borderRadius: 999, margin: '10px auto 0' }} />
+                {/* Notification content */}
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#000', fontFamily: SYS, lineHeight: 1.3, marginBottom: 2 }}>
+                  {msg.title}
+                </p>
+                <p style={{ fontSize: 13, color: '#3C3C43', fontFamily: SYS, lineHeight: 1.35, opacity: 0.8 }}>
+                  {msg.body}
+                </p>
               </div>
             );
           })()}
