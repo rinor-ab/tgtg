@@ -130,7 +130,7 @@ function ClusteredMarkers({ pins, pinIcons, onPinClick }) {
         }
 
         const cluster = L.markerClusterGroup({
-            maxClusterRadius: 60,
+            maxClusterRadius: 35,
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
             zoomToBoundsOnClick: true,
@@ -403,8 +403,8 @@ export default function LeafletMap({ ix, tagData, handleReserve, stores, searchQ
     return (
         <div style={{ position: 'relative', width: '100%', height: '55vh', borderRadius: 16, overflow: 'hidden' }}>
             <MapContainer
-                center={[47.4245, 9.3767]}
-                zoom={15}
+                center={[47.4245, 9.3745]}
+                zoom={14}
                 style={{ width: '100%', height: '100%', background: '#F5F3EE' }}
                 zoomControl={false}
                 attributionControl={false}
