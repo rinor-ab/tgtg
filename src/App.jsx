@@ -1622,8 +1622,8 @@ export default function App() {
         <div
           className="absolute left-0 right-0 px-3"
           style={{
-            top: HEADER_H,
-            zIndex: 1100,
+            top: 0,
+            zIndex: 9998,
             transform: showNotif ? 'translateY(0)' : 'translateY(-100%)',
             opacity: showNotif ? 1 : 0,
             transition: 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 250ms ease',
@@ -1641,7 +1641,7 @@ export default function App() {
             const bags = bagCounts[notifStore?.id] ?? notifStore?.bags;
             const msg = notifType?.getMsg?.(notifStore || stores[0], bags) || { title: notifStore?.name, body: '', cta: 'View' };
             return (
-              <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', border: '1px solid #F3F4F6', padding: 16, marginTop: 8, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', border: '1px solid #F3F4F6', padding: 16, marginTop: 12, position: 'relative', overflow: 'hidden' }}>
                 {/* Auto-dismiss progress bar */}
                 {showNotif && (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3 }}>
