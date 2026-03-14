@@ -1652,8 +1652,8 @@ export default function App() {
               >
                 {/* iOS header row: app icon + app name + timestamp */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <img src="/stores/tgtg-logo.svg.png" alt="TGTG" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'contain' }} />
-                  <span style={{ fontSize: 12, fontWeight: 500, color: '#8E8E93', fontFamily: SYS, letterSpacing: '0.01em', flex: 1 }}>TGTG</span>
+                  <img src="/stores/tgtg-logo.svg.png" alt="Too Good To Go" style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'contain' }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: '#8E8E93', fontFamily: SYS, letterSpacing: '0.01em', flex: 1 }}>Too Good To Go</span>
                   <span style={{ fontSize: 12, color: '#8E8E93', fontFamily: SYS }}>now</span>
                 </div>
                 {/* Notification content */}
